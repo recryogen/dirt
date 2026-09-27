@@ -8,7 +8,7 @@ import SubjectModal from './components/SubjectModal';
 import TaskDetails from './components/TaskDetails';
 import TaskModal from './components/TaskModal';
 import Toast from './components/Toast';
-import { useNickname } from './hooks';
+import * as auth from './services/auth';
 import * as api from './services/database';
 import { isConfigured } from './services/supabaseClient';
 import type { AppData, Subject, Task, TaskInput } from './types';
@@ -16,7 +16,7 @@ import { daysUntil } from './utils/deadline';
 import { buildNumbering, normalizeNumbers, sortTasks } from './utils/numbering';
 import { buildDirtyList } from './utils/sorting';
 
-type Status = 'loading' | 'ready' | 'error' | 'unconfigured';
+type Status = 'loading' | 'ready' | 'guest' | 'error' | 'unconfigured';
 
 type ModalState =
   | null
@@ -39,11 +39,11 @@ export default function App() {
   dataRef.current = data;
   const loadedRef = useRef(false);
 
-  const [nickname, setNickname] = useNickname();
+  const [nickname, setNickname] = useState('');
   const [now, setNow] = useState(() => new Date());
 
   const [showDirty, setShowDirty] = useState(false);
-  const [loginMode, setLoginMode] = useState<null | 'login' | 'rename'>(null);
+  const [loginMode, setLoginMode] = useState<null | 'login' | 'register'>(null);
   const [modal, setModal] = useState<ModalState>(null);
   const [confirm, setConfirm] = useState<ConfirmState | null>(null);
   const [toast, setToast] = useState<string | null>(null);
@@ -65,7 +65,21 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (isConfigured) void load();
+    if (!isConfigured) return;
+    void auth
+      .restoreProfile()
+      .then(async (profile) => {
+        if (!profile) {
+          setStatus('guest');
+          return;
+        }
+        setNickname(profile.nickname);
+        await load();
+      })
+      .catch((error) => {
+        console.error(error);
+        setStatus('error');
+      });
   }, [load]);
 
   // Раз в минуту обновляем «сегодня» (чтобы дни пересчитались после полуночи);
@@ -105,52 +119,72 @@ export default function App() {
 
   // ───────────── Производные данные ─────────────
 
-  const numbering = useMemo(() => buildNumbering(data?.tasks ?? []), [data]);
+  const visibleData = useMemo<AppData | null>(() => {
+    if (!data) return null;
+    const me = nickname.trim().toLowerCase();
+    const subjects = data.subjects.filter(
+      (subject) =>
+        subject.visibility !== 'private' ||
+        (me !== '' && (subject.owner_nickname ?? '').trim().toLowerCase() === me),
+    );
+    const subjectIds = new Set(subjects.map((subject) => subject.id));
+    const tasks = data.tasks.filter((task) => subjectIds.has(task.subject_id));
+    const taskIds = new Set(tasks.map((task) => task.id));
+
+    return {
+      categories: data.categories,
+      subjects,
+      tasks,
+      completions: data.completions.filter((completion) => taskIds.has(completion.task_id)),
+    };
+  }, [data, nickname]);
+
+  const numbering = useMemo(() => buildNumbering(visibleData?.tasks ?? []), [visibleData]);
 
   const tasksBySubject = useMemo(() => {
     const map = new Map<string, Task[]>();
-    for (const task of data?.tasks ?? []) {
+    for (const task of visibleData?.tasks ?? []) {
       const list = map.get(task.subject_id);
       if (list) list.push(task);
       else map.set(task.subject_id, [task]);
     }
     for (const [key, list] of map) map.set(key, sortTasks(list));
     return map;
-  }, [data]);
+  }, [visibleData]);
 
   const subjectsByCategory = useMemo(() => {
     const map = new Map<string, Subject[]>();
-    for (const subject of data?.subjects ?? []) {
+    for (const subject of visibleData?.subjects ?? []) {
       const list = map.get(subject.category_id);
       if (list) list.push(subject);
       else map.set(subject.category_id, [subject]);
     }
     return map;
-  }, [data]);
+  }, [visibleData]);
 
   const completionsByTask = useMemo(() => {
     const map = new Map<string, AppData['completions']>();
-    for (const c of data?.completions ?? []) {
+    for (const c of visibleData?.completions ?? []) {
       const list = map.get(c.task_id);
       if (list) list.push(c);
       else map.set(c.task_id, [c]);
     }
     return map;
-  }, [data]);
+  }, [visibleData]);
 
   const doneIds = useMemo(() => {
     const me = nickname.trim().toLowerCase();
     const set = new Set<string>();
     if (!me) return set;
-    for (const c of data?.completions ?? []) {
+    for (const c of visibleData?.completions ?? []) {
       if (c.nickname.trim().toLowerCase() === me) set.add(c.task_id);
     }
     return set;
-  }, [data, nickname]);
+  }, [visibleData, nickname]);
 
   const dirtyGroups = useMemo(
-    () => (showDirty && data && nickname ? buildDirtyList(data, nickname, numbering, now) : []),
-    [showDirty, data, nickname, numbering, now],
+    () => (showDirty && visibleData && nickname ? buildDirtyList(visibleData, nickname, numbering, now) : []),
+    [showDirty, visibleData, nickname, numbering, now],
   );
 
   // ───────────── Пользователь ─────────────
@@ -164,14 +198,15 @@ export default function App() {
     }
   };
 
-  const handleLogin = (nick: string) => {
-    setNickname(nick);
-    void api.registerUser(nick);
-    const mode = loginMode;
+  const handleAuth = async (nick: string, password: string) => {
+    const profile = loginMode === 'register' ? await auth.register(nick, password) : await auth.login(nick, password);
+    setNickname(profile.nickname);
     setLoginMode(null);
+    setStatus('loading');
+    await load();
     const pending = pendingRef.current;
     pendingRef.current = null;
-    if (mode === 'login' && pending) pending(nick);
+    if (pending) pending(profile.nickname);
   };
 
   const closeLogin = () => {
@@ -179,17 +214,31 @@ export default function App() {
     setLoginMode(null);
   };
 
-  const handleLogout = () => {
-    setNickname('');
-    setShowDirty(false);
+  const handleLogout = async () => {
+    try {
+      await auth.logout();
+      setNickname('');
+      setData(null);
+      loadedRef.current = false;
+      setShowDirty(false);
+      setModal(null);
+      setStatus('guest');
+    } catch (error) {
+      console.error(error);
+      setToast('Не удалось выйти. Попробуйте ещё раз.');
+    }
   };
 
   const handleDirtyClick = () => {
+    if (!nickname) {
+      requireUser(() => setShowDirty(true));
+      return;
+    }
     if (!data) {
       setToast('Данные ещё не загружены.');
       return;
     }
-    requireUser(() => setShowDirty(true));
+    setShowDirty(true);
   };
 
   // ───────────── Дисциплины ─────────────
@@ -208,6 +257,22 @@ export default function App() {
         await run(() => api.deleteSubject(subject.id));
         setConfirm(null);
       },
+    });
+  };
+
+  const askToggleSubjectVisibility = (subject: Subject) => {
+    requireUser((nick) => {
+      const makePrivate = subject.visibility !== 'private';
+      setConfirm({
+        message: makePrivate
+          ? `Сделать дисциплину «${subject.name}» личной? Она и все её задания будут видны только пользователю «${nick}».`
+          : `Сделать дисциплину «${subject.name}» публичной? Она и все её задания станут видны всем пользователям.`,
+        confirmLabel: makePrivate ? 'Сделать личной' : 'Сделать публичной',
+        onConfirm: async () => {
+          await run(() => api.setSubjectVisibility(subject.id, makePrivate ? 'private' : 'public', nick));
+          setConfirm(null);
+        },
+      });
     });
   };
 
@@ -276,8 +341,8 @@ export default function App() {
 
   // ───────────── Отрисовка ─────────────
 
-  const detailsTask = modal?.kind === 'details' ? data?.tasks.find((t) => t.id === modal.taskId) : undefined;
-  const subjectName = (id: string) => data?.subjects.find((s) => s.id === id)?.name ?? '';
+  const detailsTask = modal?.kind === 'details' ? visibleData?.tasks.find((t) => t.id === modal.taskId) : undefined;
+  const subjectName = (id: string) => visibleData?.subjects.find((s) => s.id === id)?.name ?? '';
 
   let content: ReactNode = null;
   if (status === 'unconfigured') {
@@ -292,6 +357,21 @@ export default function App() {
     );
   } else if (status === 'loading') {
     content = <div className="notice notice--plain">Загружаем данные…</div>;
+  } else if (status === 'guest') {
+    content = (
+      <div className="notice auth-notice">
+        <h2 className="notice__title">Требуется вход</h2>
+        <p>Войдите под своим именем и паролем или создайте новый аккаунт.</p>
+        <div className="form__actions">
+          <button type="button" className="btn btn--primary" onClick={() => setLoginMode('login')}>
+            Войти
+          </button>
+          <button type="button" className="btn btn--outline" onClick={() => setLoginMode('register')}>
+            Регистрация
+          </button>
+        </div>
+      </div>
+    );
   } else if (status === 'error') {
     content = (
       <div className="notice">
@@ -330,6 +410,7 @@ export default function App() {
         onAddTask={(subject) => setModal({ kind: 'task', subjectId: subject.id })}
         onRenameSubject={(subject) => setModal({ kind: 'subject', categoryId: category.id, subject })}
         onDeleteSubject={askDeleteSubject}
+        onToggleSubjectVisibility={askToggleSubjectVisibility}
         onOpenTask={(taskId) => setModal({ kind: 'details', taskId })}
         onMoveTask={(subjectId, taskId, dir) => void moveTask(subjectId, taskId, dir)}
       />
@@ -354,8 +435,7 @@ export default function App() {
       <Header
         nickname={nickname}
         onLoginClick={() => setLoginMode('login')}
-        onRenameClick={() => setLoginMode('rename')}
-        onLogout={handleLogout}
+        onLogout={() => void handleLogout()}
         onDirtyClick={handleDirtyClick}
       />
 
@@ -391,16 +471,21 @@ export default function App() {
 
       {loginMode && (
         <LoginModal
-          title={loginMode === 'rename' ? 'Смена имени' : 'Вход'}
-          submitLabel={loginMode === 'rename' ? 'Сохранить' : 'Войти'}
-          initialValue={loginMode === 'rename' ? nickname : ''}
-          onSubmit={handleLogin}
+          key={loginMode}
+          mode={loginMode}
+          onSubmit={handleAuth}
+          onSwitchMode={() => setLoginMode((mode) => (mode === 'login' ? 'register' : 'login'))}
           onClose={closeLogin}
         />
       )}
 
       {confirm && (
-        <ConfirmDialog message={confirm.message} onConfirm={confirm.onConfirm} onCancel={() => setConfirm(null)} />
+        <ConfirmDialog
+          message={confirm.message}
+          confirmLabel={confirm.confirmLabel}
+          onConfirm={confirm.onConfirm}
+          onCancel={() => setConfirm(null)}
+        />
       )}
 
       {toast && <Toast message={toast} onClose={() => setToast(null)} />}

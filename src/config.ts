@@ -23,9 +23,6 @@ export const DEFAULT_CATEGORIES = [
 /** Максимальная длина ника. */
 export const NICKNAME_MAX_LENGTH = 40;
 
-/** Ключ localStorage, под которым хранится ник. */
-export const NICKNAME_STORAGE_KEY = 'study-dirt:nickname';
-
 export const TASK_TYPE_LABELS: Record<TaskType, string> = {
   practical: 'Практическая работа',
   lab: 'Лабораторная работа',

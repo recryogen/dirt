@@ -1,5 +1,5 @@
 import { DEFAULT_CATEGORIES } from '../config';
-import type { AppData, Category, Completion, Subject, Task, TaskInput } from '../types';
+import type { AppData, Category, Completion, Subject, SubjectVisibility, Task, TaskInput } from '../types';
 import { supabase } from './supabaseClient';
 
 /**
@@ -50,17 +50,6 @@ export async function ensureDefaultCategories(): Promise<void> {
   check(error);
 }
 
-// ───────────── Пользователи ─────────────
-
-/** Запоминает ник в таблице users. Не критично: ошибки игнорируются. */
-export async function registerUser(nickname: string): Promise<void> {
-  try {
-    await db().from('users').upsert({ nickname }, { onConflict: 'nickname', ignoreDuplicates: true });
-  } catch (e) {
-    console.warn('registerUser failed', e);
-  }
-}
-
 // ───────────── Дисциплины ─────────────
 
 export async function createSubject(categoryId: string, name: string): Promise<void> {
@@ -76,6 +65,27 @@ export async function renameSubject(id: string, name: string): Promise<void> {
 export async function deleteSubject(id: string): Promise<void> {
   // задания и отметки удаляются каскадно (on delete cascade)
   const { error } = await db().from('subjects').delete().eq('id', id);
+  check(error);
+}
+
+/** Меняет видимость дисциплины. Личная дисциплина привязывается к нику владельца. */
+export async function setSubjectVisibility(
+  id: string,
+  visibility: SubjectVisibility,
+  nickname: string,
+): Promise<void> {
+  const { data: authData, error: authError } = await db().auth.getUser();
+  check(authError);
+  if (!authData.user) throw new Error('Authentication required');
+
+  const { error } = await db()
+    .from('subjects')
+    .update({
+      visibility,
+      owner_nickname: visibility === 'private' ? nickname : null,
+      owner_user_id: visibility === 'private' ? authData.user.id : null,
+    })
+    .eq('id', id);
   check(error);
 }
 
@@ -107,7 +117,12 @@ export async function saveNumbers(updates: { id: string; number: number }[]): Pr
 // ───────────── Отметки о выполнении ─────────────
 
 export async function markCompleted(taskId: string, nickname: string): Promise<void> {
-  const { error } = await db().from('task_completions').insert({ task_id: taskId, nickname });
+  const { data: authData, error: authError } = await db().auth.getUser();
+  check(authError);
+  if (!authData.user) throw new Error('Authentication required');
+  const { error } = await db()
+    .from('task_completions')
+    .insert({ task_id: taskId, nickname, user_id: authData.user.id });
   // 23505 = отметка уже есть (например, нажали с двух устройств) — это не ошибка
   if (error && (error as { code?: string }).code !== '23505') throw error;
 }

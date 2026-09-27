@@ -13,6 +13,7 @@ interface Props {
   onAddTask: () => void;
   onRename: () => void;
   onDelete: () => void;
+  onToggleVisibility: () => void;
   onOpenTask: (taskId: string) => void;
   onMoveTask: (taskId: string, direction: -1 | 1) => void;
 }
@@ -27,6 +28,7 @@ export default function Subject({
   onAddTask,
   onRename,
   onDelete,
+  onToggleVisibility,
   onOpenTask,
   onMoveTask,
 }: Props) {
@@ -45,6 +47,15 @@ export default function Subject({
             +
           </button>
         </div>
+      </div>
+
+      <div className="subject__privacy">
+        <span className={`privacy-badge privacy-badge--${subject.visibility}`}>
+          {subject.visibility === 'private' ? `Личная: ${subject.owner_nickname ?? ''}` : 'Публичная'}
+        </span>
+        <button type="button" className="privacy-btn" onClick={onToggleVisibility}>
+          {subject.visibility === 'private' ? 'Сделать публичной' : 'Сделать личной'}
+        </button>
       </div>
 
       {tasks.length === 0 ? (

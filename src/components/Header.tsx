@@ -3,12 +3,11 @@ import { useEffect, useRef, useState } from 'react';
 interface Props {
   nickname: string;
   onLoginClick: () => void;
-  onRenameClick: () => void;
   onLogout: () => void;
   onDirtyClick: () => void;
 }
 
-export default function Header({ nickname, onLoginClick, onRenameClick, onLogout, onDirtyClick }: Props) {
+export default function Header({ nickname, onLoginClick, onLogout, onDirtyClick }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -50,17 +49,6 @@ export default function Header({ nickname, onLoginClick, onRenameClick, onLogout
             </button>
             {menuOpen && (
               <div className="user-menu__list" role="menu">
-                <button
-                  type="button"
-                  role="menuitem"
-                  className="user-menu__item"
-                  onClick={() => {
-                    setMenuOpen(false);
-                    onRenameClick();
-                  }}
-                >
-                  Сменить имя
-                </button>
                 <button
                   type="button"
                   role="menuitem"

@@ -13,6 +13,7 @@ interface Props {
   onAddTask: (subject: SubjectModel) => void;
   onRenameSubject: (subject: SubjectModel) => void;
   onDeleteSubject: (subject: SubjectModel) => void;
+  onToggleSubjectVisibility: (subject: SubjectModel) => void;
   onOpenTask: (taskId: string) => void;
   onMoveTask: (subjectId: string, taskId: string, direction: -1 | 1) => void;
 }
@@ -29,6 +30,7 @@ export default function Category({
   onAddTask,
   onRenameSubject,
   onDeleteSubject,
+  onToggleSubjectVisibility,
   onOpenTask,
   onMoveTask,
 }: Props) {
@@ -62,6 +64,7 @@ export default function Category({
               onAddTask={() => onAddTask(subject)}
               onRename={() => onRenameSubject(subject)}
               onDelete={() => onDeleteSubject(subject)}
+              onToggleVisibility={() => onToggleSubjectVisibility(subject)}
               onOpenTask={onOpenTask}
               onMoveTask={(taskId, dir) => onMoveTask(subject.id, taskId, dir)}
             />

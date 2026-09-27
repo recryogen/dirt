@@ -1,5 +1,6 @@
 export type TaskType = 'practical' | 'lab';
 export type Importance = 'important' | 'normal';
+export type SubjectVisibility = 'public' | 'private';
 
 export interface Category {
   id: string;
@@ -11,6 +12,9 @@ export interface Subject {
   id: string;
   category_id: string;
   name: string;
+  visibility: SubjectVisibility;
+  owner_nickname: string | null;
+  owner_user_id: string | null;
   created_at: string;
 }
 
@@ -31,6 +35,7 @@ export interface Completion {
   id: string;
   task_id: string;
   nickname: string;
+  user_id: string | null;
   completed_at: string;
 }
 

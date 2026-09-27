@@ -56,12 +56,12 @@ code { padding: 1px 4px; border: 1px solid var(--win-mid); background: #fff; fon
 .topbar__brand-sub { color: #333; font-size: 11px; }
 .header__hint { color: #172321; font-size: 12px; text-align: center; }
 
-.dirty-btn, .btn, .plus-btn, .icon-btn, .user-menu__item {
+.dirty-btn, .btn, .plus-btn, .icon-btn, .privacy-btn, .user-menu__item {
   border-top: 2px solid var(--win-light); border-left: 2px solid var(--win-light);
   border-right: 2px solid var(--win-dark); border-bottom: 2px solid var(--win-dark);
   background: var(--win); box-shadow: 1px 1px 0 #000;
 }
-.dirty-btn:active:not(:disabled), .btn:active:not(:disabled), .plus-btn:active:not(:disabled), .icon-btn:active:not(:disabled), .user-menu__item:active:not(:disabled) {
+.dirty-btn:active:not(:disabled), .btn:active:not(:disabled), .plus-btn:active:not(:disabled), .icon-btn:active:not(:disabled), .privacy-btn:active:not(:disabled), .user-menu__item:active:not(:disabled) {
   border-top-color: var(--win-dark); border-left-color: var(--win-dark);
   border-right-color: var(--win-light); border-bottom-color: var(--win-light);
   box-shadow: none; transform: translate(1px, 1px);
@@ -102,6 +102,11 @@ code { padding: 1px 4px; border: 1px solid var(--win-mid); background: #fff; fon
 .subject__head { display: flex; align-items: center; justify-content: space-between; gap: 5px; min-height: 34px; padding: 5px 5px 5px 8px; border-bottom: 1px solid var(--win-mid); background: #d4d4d4; }
 .subject__name { min-width: 0; overflow-wrap: anywhere; font-size: 13px; font-weight: 700; }
 .subject__actions { display: flex; flex: none; align-items: center; gap: 3px; }
+.subject__privacy { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 4px 5px 4px 8px; border-bottom: 1px solid var(--win-mid); background: #e4e4e4; }
+.privacy-badge { min-width: 0; overflow: hidden; font-size: 10px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.privacy-badge--public { color: #004b00; }
+.privacy-badge--private { color: #700000; }
+.privacy-btn { flex: none; min-height: 21px; padding: 2px 6px; font-size: 10px; font-weight: 700; }
 
 .task { display: flex; align-items: stretch; border-top: 1px solid #aaa; background: #fff; }
 .task:first-child { border-top: 0; }
