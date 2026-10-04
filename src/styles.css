@@ -56,6 +56,15 @@ code { padding: 1px 4px; border: 1px solid var(--win-mid); background: #fff; fon
 .topbar__brand-sub { color: #333; font-size: 11px; }
 .header__hint { color: #172321; font-size: 12px; text-align: center; }
 
+.site-tabs { display: flex; width: 100%; padding: 3px 3px 0; border: 2px outset #eee; background: var(--win); }
+.site-tabs__item { min-height: 32px; padding: 5px 22px; border: 0; border-right: 1px solid #777; background: transparent; font-family: var(--font-mono); font-weight: 700; }
+.site-tabs__item:hover { background: #ddd; }
+.site-tabs__item--active { color: #fff; background: var(--title); }
+.site-tabs__item--active:hover { background: var(--title); }
+.joke-corner { display: flex; justify-content: flex-end; width: 100%; margin-top: 8px; }
+.joke-banner { display: flex; flex-direction: column; gap: 3px; width: min(440px, 100%); padding: 6px 9px; border: 2px inset #eee; background: #fff7c4; font-size: 11px; white-space: pre-wrap; }
+.joke-banner__label { flex: none; color: #800000; font-family: var(--font-mono); font-size: 10px; }
+
 .dirty-btn, .btn, .plus-btn, .icon-btn, .privacy-btn, .user-menu__item {
   border-top: 2px solid var(--win-light); border-left: 2px solid var(--win-light);
   border-right: 2px solid var(--win-dark); border-bottom: 2px solid var(--win-dark);
@@ -182,6 +191,57 @@ code { padding: 1px 4px; border: 1px solid var(--win-mid); background: #fff; fon
 .done-list__me { font-weight: 700; }
 
 .notice { width: min(620px, 100%); margin: 40px auto; padding: 18px; }
+.page-window { padding: 3px; border: 2px outset #eee; background: var(--win); box-shadow: 2px 2px 0 rgba(0,0,0,.35); }
+.schedule-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 9px; border-bottom: 1px solid #777; }
+.schedule-toolbar__status { color: #333; font-size: 12px; }
+.file-input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+.schedule-empty { margin: 10px; padding: 22px; border: 2px inset #eee; background: #fff; text-align: center; }
+.schedule-weeks { display: flex; flex-direction: column; gap: 12px; padding: 7px; }
+.schedule-week { border: 2px inset #eee; background: #fff; }
+.schedule-week__title { padding: 5px 8px; border-bottom: 1px solid #555; background: #d8d8d8; color: #000080; font-family: var(--font-mono); font-size: 13px; }
+.schedule-table-wrap { overflow-x: auto; }
+.schedule-table { width: 100%; min-width: 1080px; table-layout: fixed; border-collapse: collapse; }
+.schedule-table th, .schedule-table td { border: 1px solid #888; }
+.schedule-table thead th { height: 46px; padding: 4px; background: #c8c8c8; font-size: 11px; text-transform: capitalize; }
+.schedule-table thead th strong, .schedule-table thead th span { display: block; }
+.schedule-table__time-head, .schedule-table__time { width: 74px; }
+.schedule-table__time { padding: 8px 4px; background: #d8d8d8; color: #000080; font-family: var(--font-mono); font-size: 13px; vertical-align: top; }
+.schedule-table td { height: 82px; padding: 3px; background: #fff; vertical-align: top; }
+.schedule-table .schedule-table__weekend { background: #eeeeee; }
+.schedule-table thead .schedule-table__today { color: #fff; background: #800000; }
+.schedule-table tbody .schedule-table__today { background: #fff1f1; box-shadow: inset 2px 0 #b00000, inset -2px 0 #b00000; }
+.calendar-event { display: flex; flex-direction: column; gap: 2px; margin-bottom: 3px; padding: 5px; border: 1px solid #555; background: #e7edff; overflow-wrap: anywhere; }
+.calendar-event__title { font-weight: 700; }
+.calendar-event__end { color: #000080; font-family: var(--font-mono); font-size: 10px; }
+.calendar-event__details { color: #444; font-size: 10px; white-space: pre-wrap; }
+.note-composer { display: flex; gap: 8px; padding: 10px; }
+.note-composer textarea, .sticky-note textarea { width: 100%; min-height: 86px; padding: 7px; border: 2px inset #eee; resize: vertical; }
+.notes-board { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; padding: 10px; align-items: start; }
+.sticky-note { min-height: 190px; padding: 12px; border: 1px solid #7c702c; box-shadow: 3px 3px 0 rgba(0,0,0,.25); background: #fff39a; }
+.sticky-note--1 { background: #bdebbd; }.sticky-note--2 { background: #cbdcff; }.sticky-note--3 { background: #ffcbdc; }
+.sticky-note p { min-height: 105px; overflow-wrap: anywhere; white-space: pre-wrap; }
+.sticky-note footer { display: flex; flex-direction: column; gap: 7px; margin-top: 8px; padding-top: 7px; border-top: 1px dashed #777; color: #444; font-size: 10px; }
+.sticky-note footer div { display: flex; flex-wrap: wrap; gap: 5px; }
+.sticky-note .btn { min-height: 24px; padding: 3px 7px; font-size: 10px; }
+.crossword-status { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 7px 9px; border-bottom: 1px solid #777; background: #ddd; font-size: 12px; }
+.crossword-status strong { padding: 3px 7px; border: 1px solid #006000; background: #b9efb9; color: #004c00; font-family: var(--font-mono); }
+.crossword-layout { display: grid; grid-template-columns: minmax(460px, auto) minmax(320px, 1fr); gap: 12px; padding: 10px; align-items: start; }
+.crossword-grid-wrap { overflow: auto; padding: 8px; border: 2px inset #eee; background: #666; }
+.crossword-grid { display: grid; width: max-content; margin: 0 auto; border: 2px solid #111; background: #111; }
+.crossword-cell { position: relative; display: block; width: 31px; height: 31px; border: 1px solid #222; background: #fff; }
+.crossword-cell--block { background: #222; }
+.crossword-cell--active { background: #fff7a7; }
+.crossword-cell--wrong { background: #ffb4b4; }
+.crossword-cell__number { position: absolute; z-index: 2; top: 0; left: 2px; font: 8px/10px Arial, sans-serif; pointer-events: none; }
+.crossword-cell input { width: 100%; height: 100%; padding: 6px 0 0; border: 0; outline: 0; background: transparent; font-family: var(--font-mono); font-size: 19px; font-weight: 700; text-align: center; text-transform: uppercase; }
+.crossword-cell input:focus { box-shadow: inset 0 0 0 2px #000080; }
+.crossword-clues { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+.crossword-clues__column { border: 2px inset #eee; background: #fff; }
+.crossword-clues__column h3 { padding: 5px 7px; background: #000080; color: #fff; font-family: var(--font-mono); font-size: 12px; }
+.crossword-clue { display: block; width: 100%; padding: 6px 7px; border: 0; border-bottom: 1px solid #bbb; background: #fff; font-size: 11px; text-align: left; }
+.crossword-clue:hover, .crossword-clue--active { background: #fff7a7; }
+.crossword-clue small { display: block; margin-top: 2px; color: #666; font-size: 9px; }
+.crossword-actions { display: flex; gap: 8px; padding: 0 10px 10px; }
 .notice__title { margin-bottom: 9px; color: var(--title); font-family: var(--font-mono); font-size: 18px; }
 .notice--plain { text-align: center; }
 .toast { position: fixed; z-index: 200; right: 14px; bottom: 14px; display: flex; align-items: center; gap: 12px; max-width: min(420px, calc(100vw - 28px)); padding: 8px; border-top: 2px solid var(--win-light); border-left: 2px solid var(--win-light); border-right: 2px solid var(--win-dark); border-bottom: 2px solid var(--win-dark); background: var(--win); box-shadow: 2px 2px 0 #000; }
@@ -199,6 +259,7 @@ code { padding: 1px 4px; border: 1px solid var(--win-mid); background: #fff; fon
   .dirty-window__body, .dirty-placeholder { min-height: 380px; }
   .task { flex-direction: row; }
   .task__move { flex-direction: column; }
+  .crossword-layout { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 560px) {
@@ -211,4 +272,11 @@ code { padding: 1px 4px; border: 1px solid var(--win-mid); background: #fff; fon
   .dirty-item__deadline { grid-column: 2; align-items: flex-start; margin-top: 4px; }
   .form__actions { align-items: stretch; flex-direction: column; }
   .details__grid { grid-template-columns: 1fr; }
+  .site-tabs { overflow-x: auto; }
+  .site-tabs__item { flex: 1; padding-inline: 10px; }
+  .joke-banner, .note-composer { flex-direction: column; }
+  .joke-corner { justify-content: stretch; }
+  .crossword-layout { padding: 6px; }
+  .crossword-clues { grid-template-columns: 1fr; }
+  .crossword-actions { flex-direction: column; }
 }

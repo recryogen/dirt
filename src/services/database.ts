@@ -1,5 +1,5 @@
 import { DEFAULT_CATEGORIES } from '../config';
-import type { AppData, Category, Completion, Subject, SubjectVisibility, Task, TaskInput } from '../types';
+import type { AppData, Category, Completion, CrosswordProgress, SharedNote, Subject, SubjectVisibility, Task, TaskInput, UserCalendar } from '../types';
 import { supabase } from './supabaseClient';
 
 /**
@@ -129,5 +129,95 @@ export async function markCompleted(taskId: string, nickname: string): Promise<v
 
 export async function unmarkCompleted(completionId: string): Promise<void> {
   const { error } = await db().from('task_completions').delete().eq('id', completionId);
+  check(error);
+}
+
+// ───────────── Личное расписание ─────────────
+
+export async function loadCalendar(): Promise<UserCalendar | null> {
+  const { data, error } = await db().from('user_calendars').select('*').maybeSingle();
+  check(error);
+  return (data as UserCalendar | null) ?? null;
+}
+
+export async function saveCalendar(filename: string, icsText: string): Promise<void> {
+  const { data: authData, error: authError } = await db().auth.getUser();
+  check(authError);
+  if (!authData.user) throw new Error('Authentication required');
+  const { error } = await db().from('user_calendars').upsert({
+    user_id: authData.user.id,
+    filename,
+    ics_text: icsText,
+    updated_at: new Date().toISOString(),
+  });
+  check(error);
+}
+
+export async function deleteCalendar(): Promise<void> {
+  const { data: authData, error: authError } = await db().auth.getUser();
+  check(authError);
+  if (!authData.user) throw new Error('Authentication required');
+  const { error } = await db().from('user_calendars').delete().eq('user_id', authData.user.id);
+  check(error);
+}
+
+// ───────────── Общие заметки ─────────────
+
+export async function loadNotes(): Promise<SharedNote[]> {
+  const { data, error } = await db().from('shared_notes').select('*').order('updated_at', { ascending: false });
+  check(error);
+  return (data ?? []) as SharedNote[];
+}
+
+export async function createNote(content: string, nickname: string): Promise<void> {
+  const { data: authData, error: authError } = await db().auth.getUser();
+  check(authError);
+  if (!authData.user) throw new Error('Authentication required');
+  const { error } = await db().from('shared_notes').insert({
+    content,
+    author_nickname: nickname,
+    created_by: authData.user.id,
+  });
+  check(error);
+}
+
+export async function updateNote(id: string, content: string): Promise<void> {
+  const { error } = await db().from('shared_notes').update({ content, updated_at: new Date().toISOString() }).eq('id', id);
+  check(error);
+}
+
+export async function deleteNote(id: string): Promise<void> {
+  const { error } = await db().from('shared_notes').delete().eq('id', id);
+  check(error);
+}
+
+// ───────────── Анекдот дня ─────────────
+
+export async function loadDailyJoke(): Promise<string> {
+  const { data, error } = await db().functions.invoke('daily-joke');
+  check(error);
+  if (!data?.text || typeof data.text !== 'string') throw new Error('Joke is unavailable');
+  return data.text;
+}
+
+// ───────────── Личный прогресс кроссворда ─────────────
+
+export async function loadCrosswordProgress(puzzleDate: string): Promise<CrosswordProgress | null> {
+  const { data, error } = await db().from('crossword_progress').select('*').eq('puzzle_date', puzzleDate).maybeSingle();
+  check(error);
+  return (data as CrosswordProgress | null) ?? null;
+}
+
+export async function saveCrosswordProgress(puzzleDate: string, cells: Record<string, string>, completed: boolean): Promise<void> {
+  const { data: authData, error: authError } = await db().auth.getUser();
+  check(authError);
+  if (!authData.user) throw new Error('Authentication required');
+  const { error } = await db().from('crossword_progress').upsert({
+    user_id: authData.user.id,
+    puzzle_date: puzzleDate,
+    cells,
+    completed,
+    updated_at: new Date().toISOString(),
+  });
   check(error);
 }

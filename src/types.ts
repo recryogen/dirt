@@ -54,3 +54,27 @@ export interface TaskInput {
   deadline: string;
   importance: Importance;
 }
+
+export interface UserCalendar {
+  user_id: string;
+  filename: string;
+  ics_text: string;
+  updated_at: string;
+}
+
+export interface SharedNote {
+  id: string;
+  content: string;
+  author_nickname: string;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CrosswordProgress {
+  user_id: string;
+  puzzle_date: string;
+  cells: Record<string, string>;
+  completed: boolean;
+  updated_at: string;
+}

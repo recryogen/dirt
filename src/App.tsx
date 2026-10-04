@@ -1,9 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import Category from './components/Category';
 import ConfirmDialog from './components/ConfirmDialog';
+import CrosswordPage from './components/CrosswordPage';
 import DirtyList from './components/DirtyList';
 import Header from './components/Header';
+import JokeBanner from './components/JokeBanner';
 import LoginModal from './components/LoginModal';
+import NotesPage from './components/NotesPage';
+import SchedulePage from './components/SchedulePage';
 import SubjectModal from './components/SubjectModal';
 import TaskDetails from './components/TaskDetails';
 import TaskModal from './components/TaskModal';
@@ -17,6 +21,7 @@ import { buildNumbering, normalizeNumbers, sortTasks } from './utils/numbering';
 import { buildDirtyList } from './utils/sorting';
 
 type Status = 'loading' | 'ready' | 'guest' | 'error' | 'unconfigured';
+type AppTab = 'tasks' | 'schedule' | 'notes' | 'crossword';
 
 type ModalState =
   | null
@@ -40,6 +45,7 @@ export default function App() {
   const loadedRef = useRef(false);
 
   const [nickname, setNickname] = useState('');
+  const [activeTab, setActiveTab] = useState<AppTab>('tasks');
   const [now, setNow] = useState(() => new Date());
 
   const [showDirty, setShowDirty] = useState(false);
@@ -223,6 +229,7 @@ export default function App() {
       setShowDirty(false);
       setModal(null);
       setStatus('guest');
+      setActiveTab('tasks');
     } catch (error) {
       console.error(error);
       setToast('Не удалось выйти. Попробуйте ещё раз.');
@@ -384,6 +391,12 @@ export default function App() {
         </div>
       </div>
     );
+  } else if (activeTab === 'schedule') {
+    content = <SchedulePage now={now} onError={setToast} />;
+  } else if (activeTab === 'notes') {
+    content = <NotesPage nickname={nickname} onError={setToast} />;
+  } else if (activeTab === 'crossword') {
+    content = <CrosswordPage now={now} onError={setToast} />;
   } else if (data && data.categories.length === 0) {
     content = (
       <div className="notice">
@@ -434,11 +447,14 @@ export default function App() {
     <div className="app">
       <Header
         nickname={nickname}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
         onLoginClick={() => setLoginMode('login')}
         onLogout={() => void handleLogout()}
         onDirtyClick={handleDirtyClick}
       />
 
+      {status === 'ready' && <div className="joke-corner"><JokeBanner /></div>}
       <main className="main">{content}</main>
 
       {modal?.kind === 'subject' && (

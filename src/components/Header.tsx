@@ -2,12 +2,14 @@ import { useEffect, useRef, useState } from 'react';
 
 interface Props {
   nickname: string;
+  activeTab: 'tasks' | 'schedule' | 'notes' | 'crossword';
+  onTabChange: (tab: 'tasks' | 'schedule' | 'notes' | 'crossword') => void;
   onLoginClick: () => void;
   onLogout: () => void;
   onDirtyClick: () => void;
 }
 
-export default function Header({ nickname, onLoginClick, onLogout, onDirtyClick }: Props) {
+export default function Header({ nickname, activeTab, onTabChange, onLoginClick, onLogout, onDirtyClick }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -70,10 +72,19 @@ export default function Header({ nickname, onLoginClick, onLogout, onDirtyClick 
         )}
       </div>
 
-      <button type="button" className="dirty-btn" onClick={onDirtyClick}>
-        <span className="dirty-btn__text">СДЕЛАТЬ ГРЯЗЬ</span>
-      </button>
-      <p className="header__hint">Сортировка невыполненных заданий по важности и срочности</p>
+      <nav className="site-tabs" aria-label="Разделы сайта">
+        <button className={activeTab === 'tasks' ? 'site-tabs__item site-tabs__item--active' : 'site-tabs__item'} onClick={() => onTabChange('tasks')}>ЗАДАНИЯ</button>
+        <button className={activeTab === 'schedule' ? 'site-tabs__item site-tabs__item--active' : 'site-tabs__item'} onClick={() => onTabChange('schedule')}>РАСПИСАНИЕ</button>
+        <button className={activeTab === 'notes' ? 'site-tabs__item site-tabs__item--active' : 'site-tabs__item'} onClick={() => onTabChange('notes')}>ЗАМЕТКИ</button>
+        <button className={activeTab === 'crossword' ? 'site-tabs__item site-tabs__item--active' : 'site-tabs__item'} onClick={() => onTabChange('crossword')}>КРОССВОРД</button>
+      </nav>
+
+      {activeTab === 'tasks' && <>
+        <button type="button" className="dirty-btn" onClick={onDirtyClick}>
+          <span className="dirty-btn__text">СДЕЛАТЬ ГРЯЗЬ</span>
+        </button>
+        <p className="header__hint">Сортировка невыполненных заданий по важности и срочности</p>
+      </>}
     </header>
   );
 }
